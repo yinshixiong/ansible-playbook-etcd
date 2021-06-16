@@ -1,5 +1,5 @@
 # 安装etcd集装
-## 几种状态变量说明
+## 几种状态说明
    run_mode == 'Deploy'
    run_mode == 'Stop'
    run_mode == 'Restart'
