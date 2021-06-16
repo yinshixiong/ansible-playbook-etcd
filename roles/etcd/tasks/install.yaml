@@ -1,0 +1,4 @@
+- include: alias.yaml
+- include: configure.yaml
+- include: service.yaml
+#- include: check_status.yaml

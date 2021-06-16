@@ -1,0 +1,7 @@
+---
+- name: ReloadSystemd
+  command: systemctl daemon-reload
+
+- name: RestartService
+  service: name=etcd state=restarted
+  #when: run_mode == 'Deploy'

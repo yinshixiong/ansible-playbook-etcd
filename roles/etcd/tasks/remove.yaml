@@ -1,0 +1,37 @@
+- name: Reload systemd
+  command: systemctl daemon-reload
+
+- name: Stopped etcd 
+  service:
+    name: etcd
+    state: stopped
+    enabled: no
+
+- name: get etcd status
+  shell: systemctl status etcd | grep -i 'active' | awk '{print $3}' | tr -d '()'
+  register: etcdStatus
+
+- name: show etcd status
+  debug: msg={{ etcdStatus.stdout }}
+
+# 需要清理/etc/hosts 映射信息
+#- name: delete hosts k,v
+
+- name: backup etcd source files 
+  shell: "{{ item }}"
+  with_items:
+    - "mkdir -p /data/backup_etcd/$(date +%Y-%m-%d) &>/dev/null"
+    - "cp -r /data/etcd /data/backup_etcd/$(date +%Y-%m-%d)/etcd_data_$(date +%Y%m%d%H%M%S)"
+    - "cp -r /etc/ssl/etcd/ssl /data/backup_etcd/$(date +%Y-%m-%d)/etcd_ssl_$(date +%Y%m%d%H%M%S)"
+    - "cp -f /usr/lib/systemd/system/etcd.service /data/backup_etcd/$(date +%Y-%m-%d)/etcd.service"
+    - "cp -f /etc/etcd/etcd.conf /data/backup_etcd/$(date +%Y-%m-%d)/etcd.conf_$(date +%Y%m%d%H%M%S)"
+  ignore_errors: True
+
+- name: remove etcd data
+  file: dest={{ item }} state=absent
+  with_items:
+    - "/data/etcd"
+    - "/usr/lib/systemd/system/etcd.service"
+    - "/etc/etcd/etcd.conf"
+    - "/etc/ssl/etcd/ssl"
+  ignore_errors: True

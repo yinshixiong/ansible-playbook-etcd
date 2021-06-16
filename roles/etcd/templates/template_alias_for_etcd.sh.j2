@@ -1,0 +1,19 @@
+alias etcdctlV2="ETCDCTL_API=2 /usr/local/bin/etcdctl --ca-file={{ ca_conf }} --cert-file={{ clientCert }} --key-file={{ clientKey }} --endpoints={{ ENDPOINTS_NODES }}"
+alias etcdctlV3="ETCDCTL_API=3 /usr/local/bin/etcdctl --cacert="{{ ca_conf }}" --cert="{{ clientCert }}" --key="{{ clientKey }}" --endpoints={{ ENDPOINTS_NODES }}"
+
+# 集群状态
+alias etcdctlV2ClusterStatus="ETCDCTL_API=2 /usr/local/bin/etcdctl --ca-file={{ ca_conf }} --cert-file={{ clientCert }} --key-file={{ clientKey }} --endpoints={{ ENDPOINTS_NODES }} cluster-health"
+
+# 集群成员
+alias etcdctlV2MemberList="ETCDCTL_API=2 /usr/local/bin/etcdctl --ca-file={{ ca_conf }} --cert-file={{ clientCert }} --key-file={{ clientKey }} --endpoints={{ ENDPOINTS_NODES }} member list"
+
+# 磁盘配额 默认2G
+alias etcdctlV3DiskQuota="ETCDCTL_API=3 /usr/local/bin/etcdctl --cacert="{{ ca_conf }}" --cert="{{ clientCert }}" --key="{{ clientKey }}" --endpoints={{ ENDPOINTS_NODES }} --write-out=table endpoint status"
+
+# 获取报警信息
+alias etcdctlV3GetAlarm="ETCDCTL_API=3 /usr/local/bin/etcdctl --cacert="{{ ca_conf }}" --cert="{{ clientCert }}" --key="{{ clientKey }}" --endpoints={{ ENDPOINTS_NODES }} alarm list"
+
+# 获取revision用于磁盘压缩
+#alias etcdctlV3GetRevision=$(ETCDCTL_API=3 /usr/local/bin/etcdctl --cacert="{{ ca_conf }}" --cert="{{ clientCert }}" --key="{{ clientKey }}" --endpoints={{ ENDPOINTS_NODES }} endpoint status --write-out="json" | egrep -o '"revision":[0-9]*' | egrep -o '[0-9].*')
+#
+export etcdctlV2 etcdctlV3 etcdctlV2ClusterStatus etcdctlV2MemberList etcdctlV3DiskQuota etcdctlV3GetAlarm 

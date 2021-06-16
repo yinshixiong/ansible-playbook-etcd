@@ -1,0 +1,12 @@
+- name: backup kernel.conf
+  shell: cp /etc/sysctl.conf /etc/sysctl.conf.$(date +%Y%m%d%H%M%S).bak
+
+- name: send kernel config
+  copy: src=files/kernel.conf dest=/etc/sysctl.conf force=yes
+
+- name: exec kernel config
+  shell: sysctl -p
+  register: kernelStats
+
+- name: show kernel stats
+  debug: msg={{ kernelStats.stdout }}

@@ -1,0 +1,58 @@
+#!/usr/bin/expect
+#Program:
+#       免密认证
+#author: yinshixiong
+
+set timeout 20
+set ipaddr [ lindex $argv 0 ];
+set userName [ lindex $argv 1 ];
+set passWord [ lindex $argv 2 ];
+set port [ lindex $argv 3 ];
+
+#master zk1 prometheus zk2 bind-dns zk3
+#检查参数个数是否=4
+if { $argc != "4" } {
+    puts "#-------------------------------------------------------#"
+    puts "#                                                       #"
+    puts "#Usage:  CMD <ip> <username> <password> <port>          #"
+    puts "#参数个数需为4个:                                       #"
+    puts "#第一个为IP                                             #"
+    puts "#第二个为用户名                                         #"
+    puts "#第三个为密码                                           #"
+    puts "#第四个为sshd端口                                       #"
+    puts "#                                                       #"
+    puts "#-------------------------------------------------------#"
+    exit 1
+}
+
+#检查用户是否为root,非root退出
+if { $userName != "root" } {
+    puts "#-------------------------------------------------------#"
+    puts "#                                                       #"
+    puts "#                     非root用户                        #"
+    puts "#            请重新执行安装脚本录入用户信息             #"
+    puts "#                                                       #"
+    puts "#-------------------------------------------------------#"
+    exit 2
+}
+
+if { $port != 22 } {
+    puts "#-------------------------------------------------------#"
+    puts "#                                                       #"
+    puts "#                     非22端口                          #"
+    puts "#            请重新执行安装脚本录入用户信息             #"
+    puts "#                                                       #"
+    puts "#-------------------------------------------------------#"
+    exit 3
+}
+
+spawn ssh-copy-id -p $port $userName@$ipaddr
+
+expect {
+"*yes/no" { send "yes\r";exp_continue }
+"*password:" { send "$passWord\r";exp_continue }
+"*Password:" { send "$passWord\r" }
+expect eof
+#exit 0
+#interact
+}

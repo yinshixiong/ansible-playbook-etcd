@@ -1,0 +1,14 @@
+#!/bin/bash
+
+cd {{ cfsslWorkPath }}
+if [[ -f {{ cfsslWorkPath}}/ca.pem && ! -f ssl/ca.crt ]];then
+    mv ssl/ca.pem ssl/ca.crt
+else 
+    exit 123
+fi
+
+if [[ -f {{ cfsslWorkPath}}/ca-key.pem && ! -f ssl/ca-key.crt ]];then
+    mv ssl/ca-key.pem ssl/ca-key.crt
+else 
+    exit 124
+fi

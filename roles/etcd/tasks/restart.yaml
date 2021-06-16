@@ -1,0 +1,10 @@
+- name: Reload systemd
+  command: systemctl daemon-reload
+
+- name: restart etcd cluster
+  service:
+    name: etcd
+    state: restarted
+    enabled: yes
+
+- include: check_status.yaml

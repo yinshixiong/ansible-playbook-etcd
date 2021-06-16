@@ -1,0 +1,151 @@
+- name: Create dirs
+  file: name={{ item }} state=directory
+  with_items:
+    - "{{ etcdCertPath }}"
+    - "{{ etcdDataPath }}"
+    - "{{ backupDataPath }}"
+    - "{{ etcdConfPath }}"
+
+- name: Copy etcd binaries
+  copy: src=files/{{ item }} dest=/usr/local/bin/{{ item }} mode=0755
+  with_items:
+    - etcd
+    - etcdctl
+
+- name: create cfsslWorkPath
+  file: name={{ item }} state=directory
+  with_items:
+    - "{{ cfsslWorkPath }}"
+    - "{{ cfsslWorkPath }}/json"
+    - "{{ cfsslWorkPath }}/ssl"
+  delegate_to: "{{ groups.deploy[0] }}"
+
+- name: send cert tools to localhost
+  copy: src=files/{{ item }} dest=/usr/local/bin/{{ item }} mode=0755 force=no
+  with_items:
+    - cfssl
+    - cfssl-certinfo
+    - cfssljson
+  delegate_to: "{{ groups.deploy[0] }}"
+
+- name: Copy CA config to deploy node
+  copy: src=files/{{ item }} dest={{ cfsslWorkPath }}/json/{{ item }} mode=0644
+  with_items:
+    - ca-csr.json
+    - ca-config.json
+  delegate_to: "{{ groups.deploy[0] }}"
+
+- name: Check CA Cert.exits
+  shell: "ls {{ cfsslWorkPath }}/ssl/ca.csr"
+  delegate_to: "{{ groups.deploy[0] }}"
+  ignore_errors: True
+  register: result
+
+- name: Check CA-key exits
+  shell: "ls {{ cfsslWorkPath }}/ssl/ca.crt"
+  delegate_to: "{{ groups.deploy[0] }}"
+  ignore_errors: True
+  register: resultCAKey
+
+- name: Create CA
+  shell: "cd {{ cfsslWorkPath }} && /usr/local/bin/cfssl gencert -initca json/ca-csr.json | /usr/local/bin/cfssljson -bare ssl/ca"
+  when: result is failed
+  delegate_to: "{{ groups.deploy[0] }}"
+
+# tags123
+- name: copy rename script 
+  shell: "mv {{ cfsslWorkPath }}/ssl/ca.pem {{ cfsslWorkPath }}/ssl/ca.crt && mv {{ cfsslWorkPath }}/ssl/ca-key.pem {{ cfsslWorkPath }}/ssl/ca-key.crt"
+  delegate_to: "{{ groups.deploy[0] }}"
+  run_once: true
+  when: resultCAKey is failed
+
+- name: Copy etcd-server-template.json to cfsslServer
+  template: src=templates/template_server_csr.json.j2 dest={{ cfsslWorkPath }}/json/etcd-server-csr.json mode=0644 force=yes
+  delegate_to: "{{ groups.deploy[0] }}"
+
+- name: Copy etcd-peer-template.json to cfsslServer
+  template: src=templates/template_peer_csr.json.j2 dest={{ cfsslWorkPath }}/json/etcd-peer-csr.json mode=0644 force=yes
+  delegate_to: "{{ groups.deploy[0] }}"
+
+- name: Copy etcd-client-template.json to cfsslServer
+  template: src=templates/template_client_csr.json.j2 dest={{ cfsslWorkPath }}/json/etcd-client-csr.json mode=0644 force=yes
+  delegate_to: "{{ groups.deploy[0] }}"
+
+- name: Copy etcd-client-nohostbind-template.json to cfsslServer
+  template: src=templates/template_client_nohostbind_csr.json.j2 dest={{ cfsslWorkPath }}/json/etcd-client-nohostbind-csr.json mode=0644 force=yes
+  delegate_to: "{{ groups.deploy[0] }}"
+
+- name: Check server cert
+  shell: "ls {{ cfsslWorkPath }}/ssl/server.crt"
+  delegate_to: "{{ groups.deploy[0] }}"
+  ignore_errors: True
+  register: resultServer
+
+- name: Check peer cert 
+  shell: "ls {{ cfsslWorkPath }}/ssl/peer.crt"
+  delegate_to: "{{ groups.deploy[0] }}"
+  ignore_errors: True
+  register: resultPeer
+
+- name: Check client cert
+  shell: "ls {{ cfsslWorkPath }}/ssl/client.crt"
+  delegate_to: "{{ groups.deploy[0] }}"
+  ignore_errors: True
+  register: resultClient
+
+- name: Check client no host bind cert
+  shell: "ls {{ cfsslWorkPath }}/ssl/noHostBindClient.crt"
+  delegate_to: "{{ groups.deploy[0] }}"
+  ignore_errors: True
+  register: resultNoHostBindClient
+
+- name: Create etcd server cert
+  shell: "cd {{ cfsslWorkPath }} && if [ ! -f ssl/server.crt ];then    /usr/local/bin/cfssl gencert -ca=./ssl/ca.crt -ca-key=./ssl/ca-key.crt -config=./json/ca-config.json -profile=server ./json/etcd-server-csr.json | /usr/local/bin/cfssljson -bare ssl/server;    mv ssl/server.pem ssl/server.crt;    mv ssl/server-key.pem ssl/server-key.crt ; fi"
+  when: resultServer is failed
+  delegate_to: "{{ groups.deploy[0] }}"
+
+- name: Create etcd peer cert
+  shell: "cd {{ cfsslWorkPath }} && if [ ! -f ssl/peer.crt ];then    /usr/local/bin/cfssl gencert -ca=./ssl/ca.crt -ca-key=./ssl/ca-key.crt -config=./json/ca-config.json -profile=peer ./json/etcd-peer-csr.json | /usr/local/bin/cfssljson -bare ssl/peer;    mv ssl/peer.pem ssl/peer.crt;    mv ssl/peer-key.pem ssl/peer-key.crt ; fi"
+  when: resultPeer is failed
+  delegate_to: "{{ groups.deploy[0] }}"
+
+
+- name: Create etcd client cert bind host
+  shell: "cd {{ cfsslWorkPath }} && if [ ! -f ssl/client.crt ];then    /usr/local/bin/cfssl gencert -ca=./ssl/ca.crt -ca-key=./ssl/ca-key.crt -config=./json/ca-config.json -profile=client ./json/etcd-client-csr.json | /usr/local/bin/cfssljson -bare ssl/client;    mv ssl/client.pem ssl/client.crt;    mv ssl/client-key.pem ssl/client-key.crt ; fi"
+  when: resultClient is failed
+  delegate_to: "{{ groups.deploy[0] }}"
+
+- name: Create etcd client cert no host bind
+  shell: "cd {{ cfsslWorkPath }} && if [ ! -f ssl/noHostBindClient.crt ];then    /usr/local/bin/cfssl gencert -ca=./ssl/ca.crt -ca-key=./ssl/ca-key.crt -config=./json/ca-config.json -profile=client ./json/etcd-client-nohostbind-csr.json | /usr/local/bin/cfssljson -bare ssl/noHostBindClient;    mv ssl/noHostBindClient.pem ssl/noHostBindClient.crt;    mv ssl/noHostBindClient-key.pem ssl/noHostBindClient-key.crt ; fi"
+  when: resultNoHostBindClient is failed
+  delegate_to: "{{ groups.deploy[0] }}"
+
+- name: backup cert
+  shell: "cd {{ cfsslWorkPath }} && chmod 400 ssl/* && mkdir -p /opt/$(date +%Y%m%d%H)_cert && cp ssl/* /opt/$(date +%Y%m%d%H)_cert/"
+  delegate_to: "{{ groups.deploy[0] }}"
+
+- name: create etcd.conf
+  template: src=templates/template_etcd.conf.j2 dest=/etc/etcd/etcd.conf mode=0644 force=yes
+
+- name: Synchronize root certificates
+  synchronize: src={{ cfsslWorkPath }}/ssl/{{ item }} dest=/etc/ssl/etcd/ssl/{{ item }}
+  with_items:
+    - ca.crt
+    - ca.csr
+    - ca-key.crt
+    - noHostBindClient.crt
+    - noHostBindClient.csr
+    - noHostBindClient-key.crt
+    - peer.crt
+    - peer.csr
+    - peer-key.crt
+    - server.crt
+    - server.csr
+    - server-key.crt
+    - client.crt
+    - client.csr
+    - client-key.crt
+  delegate_to: "{{ groups.deploy[0] }}"
+
+- name: sync etc hosts
+  template: src=templates/template_hosts.j2 dest=/etc/hosts force=yes

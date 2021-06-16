@@ -1,0 +1,31 @@
+ETCD_VERSION: 3.3.13
+DOWNLOAD_URL: "https://github.com/etcd-io/etcd/releases/download/{{ ETCD_VER }}/{{ ETCD_VER }}-linux-amd64.tar"
+etcdConfig: "/etc/etcd/etcd.conf"
+etcdService: "/usr/lib/systemd/system"
+etcdCommandPath: "/usr/local/bin"
+EtcdServiceName: "etcd.service"
+backupDataPath: "/data/backup_etcd"
+etcdConfPath: "/etc/etcd"
+ca_conf: "/etc/ssl/etcd/ssl/ca.crt"
+crt_conf: "/etc/ssl/etcd/ssl/clientNoHost.crt"
+key_conf: "/etc/ssl/etcd/ssl/clientNoHost-key.crt"
+clientCert: "/etc/ssl/etcd/ssl/client.crt"
+clientKey: "/etc/ssl/etcd/ssl/client-key.crt"
+serverCert: "/etc/ssl/etcd/ssl/server.crt"
+serverKey: "/etc/ssl/etcd/ssl/server-key.crt"
+peerCert: "/etc/ssl/etcd/ssl/peer.crt"
+peerKey: "/etc/ssl/etcd/ssl/peer-key.crt"
+etcdCertPath: '/etc/ssl/etcd/ssl'
+etcdDataPath: "/data/etcd/data"
+run_mode: 'Deploy'
+cfsslWorkPath: '/data/cfsslExtendCluster'
+TEMP_NODES: "{% for i in groups['etcd'] %}{{ hostvars[i]['hostname'] }}=https://{{ i }}:{{ peersPort }},{% endfor %}"
+ETCD_NODES: "{{ TEMP_NODES.rstrip(',') }}"
+# etcd 集群初始状态 new/existing
+CLUSTER_STATE: "new"
+peersPort: "2380"
+serverPort: "2379"
+ETC_HOSTS: "{% for j in groups['etcd'] %}{{ j }} {{ hostvars[j]['hostname'] }}\n{% endfor %}"
+wait_time: 10
+ENDPOINTS: "{% for k in groups['etcd'] %}https://{{ k }}:{{ serverPort }},{% endfor %}"
+ENDPOINTS_NODES: "{{ ENDPOINTS.rstrip(',') }}"

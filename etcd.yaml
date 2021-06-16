@@ -1,0 +1,10 @@
+- hosts: etcd
+  gather_facts: true
+  remote_user: root
+  roles:
+    - init/limits
+    - init/kernel
+    - init/security
+    - init/sethostname
+    - init/swap
+    - etcd

@@ -1,0 +1,21 @@
+---
+  # 安装
+- include: install.yaml
+  when: run_mode == 'Deploy'
+  # 检查状态
+- include: check_status.yaml
+  when: run_mode == 'CheckStatus'
+#- include: remove.yaml
+  # 停止集群
+- include: stop.yaml
+  when: run_mode == 'Stop'
+  # 重启所有zookeeper服务
+- include: restart.yaml
+  when: run_mode == 'Restart'
+
+  # 危险操作[会备份zk数据]
+- include: remove.yaml
+  when: run_mode == 'Remove'
+
+- include: backup.yaml
+  when: run_mode == 'Backup'

@@ -1,0 +1,5 @@
+- name: send limits.sh
+  copy: src=files/limits.conf dest=/etc/security/limits.conf mode=0644 force=yes
+
+- name: exec limits.sh
+  shell: "ulimit -SHn 404800"

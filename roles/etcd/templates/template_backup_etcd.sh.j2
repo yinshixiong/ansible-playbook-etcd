@@ -1,0 +1,13 @@
+#!/bin/bash
+
+
+backupPath={{ backupDataPath }}
+
+[[ ! -d ${backupPath} ]] && mkdir ${backupPath}
+[[ ! -d ${backupPath}/$(date +%Y-%m-%d)/$(date +%H-%M) ]] && mkdir -p $backupPath/$(date +%Y-%m-%d)/$(date +%H-%M)
+
+ETCDCTL_API=3 /usr/local/bin/etcdctl snapshot save ${backupPath}/$(date +%Y-%m-%d)/$(date +%H-%M)/snapshot.db --cacert="/etc/ssl/etcd/ssl/ca.crt" --cert="/etc/ssl/etcd/ssl/client.crt" --key="/etc/ssl/etcd/ssl/client-key.crt" --endpoints=https://127.0.0.1:2379
+
+if [[ -f $backupPath/$(date +%Y-%m-%d)/$(date +%H-%M)/snapshot.db ]];then
+    echo "$backupPath/$(date +%Y-%m-%d)/$(date +%H-%M)/snapshot.db" >> ${backupPath}/backup_etcd.log
+fi

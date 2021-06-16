@@ -1,0 +1,9 @@
+- name: wait for etcd port
+  wait_for: port={{ serverPort }} state=started timeout={{ wait_time }}
+
+- name: etcd status
+  shell: systemctl status etcd | grep -i 'active' | awk '{print $3}' | tr -d '()'
+  register: etcdStatus
+
+- name: show etcd.service status
+  debug: msg={{ etcdStatus.stdout }}

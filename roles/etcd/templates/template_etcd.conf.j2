@@ -1,0 +1,47 @@
+# [Member Flags]
+# ETCD_ELECTION_TIMEOUT=1000
+# ETCD_HEARTBEAT_INTERVAL=100
+# 指定etcd的数据目录
+ETCD_NAME={{ hostname }}
+ETCD_DATA_DIR={{ etcdDataPath }}
+
+# [Cluster Flags]
+# ETCD_AUTO_COMPACTION_RETENTIO:N=0
+ETCD_INITIAL_CLUSTER_STATE={{ CLUSTER_STATE }}
+ETCD_ADVERTISE_CLIENT_URLS=https://{{ ansible_default_ipv4.address }}:{{ serverPort }}
+ETCD_INITIAL_ADVERTISE_PEER_URLS=https://{{ ansible_default_ipv4.address }}:{{ peersPort }}
+ETCD_LISTEN_CLIENT_URLS=https://{{ ansible_default_ipv4.address }}:{{ serverPort }},https://127.0.0.1:{{ serverPort }}
+ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster
+ETCD_LISTEN_PEER_URLS=https://{{ ansible_default_ipv4.address }}:{{ peersPort }}
+ETCD_INITIAL_CLUSTER={{ ETCD_NODES }}
+#ETCD_INITIAL_CLUSTER_STATE="existing"
+# [Proxy Flags]
+ETCD_PROXY=off
+
+# [Security flags]
+# ETCD_CLIENT_CERT_AUTH=
+# ETCD_PEER_CLIENT_CERT_AUTH=
+# 指定etcd的公钥证书和私钥
+ETCD_CERT_FILE="/etc/ssl/etcd/ssl/server.crt"
+ETCD_KEY_FILE="/etc/ssl/etcd/ssl/server-key.crt"
+ETCD_TRUSTED_CA_FILE="/etc/ssl/etcd/ssl/ca.crt"
+ETCD_CLIENT_CERT_AUTH="true"
+ETCD_PEER_CLIENT_CERT_AUTH="true"
+ETCD_PEER_CERT_FILE="/etc/ssl/etcd/ssl/peer.crt"
+ETCD_PEER_KEY_FILE="/etc/ssl/etcd/ssl/peer-key.crt"
+ETCD_PEER_TRUSTED_CA_FILE="/etc/ssl/etcd/ssl/ca.crt"
+
+# 跨域
+# ETCD_CORS=""
+# ETCD_QUOTA_BACKEND_BYTES
+# ETCD_MAX_TXN_OPS=128 		  # default 128 操作数
+# ETCD_MAX_REQUEST_BYTES=1572864  # byte
+# ETCD_GRPC_KEEPALIVE_MIN_TIME=   # default 5s
+# ETCD_GRPC_KEEPALIVE_INTERVAL=2h # default 2h
+# ETCD_GRPC_KEEPALIVE_TIMEOUT=20s # 关闭无响应连接之前的额外等待时间（0禁用）
+# ETCD_LOG_LEVEL=info 		  # V3.4开始info, warn, error, panic, or fatal
+
+
+
+#[Profiling flags]
+#ETCD_METRICS=basic # default is basic

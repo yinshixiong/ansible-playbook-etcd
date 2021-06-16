@@ -1,0 +1,17 @@
+- name: send backup etcd script to etcd1
+  template: src=templates/template_backup_etcd.sh.j2 dest=/data/backup_etcd/backup_etcd.sh mode=755
+  delegate_to: "{{ groups.etcd[0] }}"
+
+- name: exec backup script 
+  shell: "bash /data/backup_etcd/backup_etcd.sh"
+  delegate_to: "{{ groups.etcd[0] }}"
+
+- name: show snap
+  shell: "ls /data/backup_etcd/$(date +%Y-%m-%d)/$(date +%H-%m)/"
+  ignore_errors: True
+  register: snapStats
+  delegate_to: "{{ groups.etcd[0] }}"
+ 
+- name: debug snapStats
+  debug: msg={{ snapStats.stdout }}
+  delegate_to: "{{ groups.etcd[0] }}"

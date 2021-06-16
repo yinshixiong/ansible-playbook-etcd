@@ -1,0 +1,15 @@
+- name: Reload systemd
+  command: systemctl daemon-reload
+
+- name: stop etcd cluster
+  service:
+    name: etcd
+    state: stopped
+    enabled: yes
+
+- name: etcd status
+  shell: systemctl status etcd | grep -i 'active' | awk '{print $2}' | tr -d '()'
+  register: etcdStatus
+
+- name: show etcd.service status
+  debug: msg={{ etcdStatus.stdout }}

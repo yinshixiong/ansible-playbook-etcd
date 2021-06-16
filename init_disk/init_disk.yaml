@@ -1,0 +1,41 @@
+---
+ - hosts: init
+   remote_user: root
+   vars:
+     - diskName: /dev/vdb
+     - diskLvmVgParted: /dev/vdb1
+     - diskNumber: 1
+     - diskStartSize: 1MiB
+     - diskSize: 19.9GiB
+     - diskStatus: present
+     - mountPath: /data/
+   vars_files:
+     - storage_vars.yaml
+   tasks:
+     - name: create {{ mountPath }}
+       file: name={{ mountPath }} state=directory
+
+     - name: Create A New Primary Partition
+       parted:
+         device: "{{ diskName }}"
+         number: "{{ diskNumber }}"
+         part_start: "{{ diskStartSize }}"
+         part_end: "{{ diskSize }}"
+         state: "{{ diskStatus }}"
+       loop: "{{ logicalvolumes }}"
+       when: item.name not in ansible_devices.vdb.partitions
+
+     - name: Make.xfs A Filesystem {{ diskLvmVgParted }}
+       filesystem:
+         fstype: xfs
+         opts: "-f -n ftype=1"
+         dev: "{{ diskLvmVgParted }}"
+
+     - name: Mount {{ diskLvmVgParted }} {{ mountPath }}    #挂载
+       mount:
+         path: "{{ mountPath }}"
+         src: "{{ diskLvmVgParted }}"
+         fstype: xfs
+         state: mounted     # 挂载
+         # 不修改accesstime | 预分配buffer缓存256m | logbufs在内存中的日志缓存区数量 | 版本号默认为2 | logbsize | 内存中每个日志缓存区的大小 256k 
+         opts: "defaults,noatime,nodiratime,nobarrier,discard,allocsize=256m,logbufs=8,attr2,logbsize=256k"   #不修改access time | 延时分配时，预分配buffered 大小
